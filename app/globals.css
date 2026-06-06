@@ -27,6 +27,8 @@
   --emerald-700: #047857;
 
   /* Functional Colors */
+  --primary-gradient: linear-gradient(135deg, var(--emerald-500), var(--emerald-700));
+  
   --bg-primary: var(--color-white);
   --bg-secondary: var(--gray-50);
   --bg-tertiary: var(--gray-100);

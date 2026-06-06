@@ -1,5 +1,6 @@
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../api/auth/[...nextauth]/route";
+import { redirect } from "next/navigation";
 import { PrismaClient } from "@prisma/client";
 import styles from "./dashboard.module.css";
 
@@ -7,6 +8,10 @@ const prisma = new PrismaClient();
 
 export default async function DashboardOverview() {
   const session = await getServerSession(authOptions);
+  
+  if (!session) {
+    redirect("/partner");
+  }
   
   const shop = await prisma.shop.findUnique({
     where: { ownerId: session.user.id }

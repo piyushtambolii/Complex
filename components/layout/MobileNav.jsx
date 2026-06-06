@@ -7,7 +7,7 @@ import styles from "./MobileNav.module.css";
 export default function MobileNav() {
   const pathname = usePathname();
 
-  if (pathname.startsWith('/dashboard') || pathname.startsWith('/partner')) {
+  if (pathname.startsWith('/dashboard') || pathname.startsWith('/partner') || pathname.startsWith('/admin')) {
     return null;
   }
 

@@ -1,14 +1,17 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { signIn, useSession } from "next-auth/react";
 import styles from "./onboarding.module.css";
 
 const DISTRICTS = ["Nandurbar", "Jalgaon", "Dhule"];
 
 export default function OnboardingForm({ categories }) {
   const router = useRouter();
+  const { status } = useSession();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
+    phone: "",
     name: "",
     description: "",
     categoryId: categories[0]?.id || "",
@@ -22,6 +25,22 @@ export default function OnboardingForm({ categories }) {
     setLoading(true);
     
     try {
+      // 1. Authenticate user inline if not logged in
+      if (status === "unauthenticated") {
+        const authRes = await signIn("credentials", {
+          phone: formData.phone,
+          otp: "1234", // Simulated OTP for MVP phase
+          redirect: false
+        });
+
+        if (authRes?.error) {
+          alert("Failed to authenticate with that phone number.");
+          setLoading(false);
+          return;
+        }
+      }
+
+      // 2. Register Shop securely
       const res = await fetch("/api/shop/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -29,7 +48,7 @@ export default function OnboardingForm({ categories }) {
       });
       
       if (res.ok) {
-        router.push("/dashboard");
+        window.location.href = "/dashboard";
       } else {
         const error = await res.json();
         alert(error.error || "Failed to onboard shop");
@@ -42,12 +61,29 @@ export default function OnboardingForm({ categories }) {
   };
 
   return (
-    <div className={styles.container}>
+    <div className={styles.container} suppressHydrationWarning>
       <div className={styles.formCard}>
         <h1 className={styles.title}>Register Your Shop</h1>
         <p className={styles.subtitle}>Join your city&apos;s digital market in 2 minutes.</p>
         
-        <form onSubmit={handleSubmit} className={styles.form}>
+        <form onSubmit={handleSubmit} className={styles.form} suppressHydrationWarning>
+          {status === "unauthenticated" && (
+            <div className={styles.formGroup}>
+              <label>Phone Number</label>
+              <input 
+                type="tel" 
+                required 
+                value={formData.phone} 
+                onChange={e => setFormData({...formData, phone: e.target.value})} 
+                className={styles.input}
+                placeholder="e.g. 9876543210"
+              />
+              <p style={{ fontSize: "0.75rem", color: "var(--text-secondary)", marginTop: "0.25rem" }}>
+                We use your phone number to create your secure shop owner account.
+              </p>
+            </div>
+          )}
+
           <div className={styles.formGroup}>
             <label>Shop Name</label>
             <input 
@@ -122,7 +158,7 @@ export default function OnboardingForm({ categories }) {
             />
           </div>
 
-          <button type="submit" disabled={loading} className={styles.btnPrimary}>
+          <button type="submit" disabled={loading ? true : undefined} className={styles.btnPrimary} suppressHydrationWarning>
             {loading ? "Registering..." : "Register Shop"}
           </button>
         </form>

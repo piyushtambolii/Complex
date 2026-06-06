@@ -2,6 +2,7 @@ import { Inter, Outfit } from "next/font/google";
 import { Providers } from "@/components/Providers";
 import Header from "@/components/layout/Header";
 import MobileNav from "@/components/layout/MobileNav";
+import InstallPrompt from "@/components/layout/InstallPrompt";
 import "./globals.css";
 
 const inter = Inter({
@@ -17,6 +18,13 @@ const outfit = Outfit({
 export const metadata = {
   title: "Complex - Hyperlocal Commerce",
   description: "Your city's digital market.",
+  manifest: "/manifest.json",
+  themeColor: "#0A0A0A",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Complex",
+  },
 };
 
 export default function RootLayout({ children }) {
@@ -25,6 +33,7 @@ export default function RootLayout({ children }) {
       <body>
         <Providers>
           <Header />
+          <InstallPrompt />
           <main style={{ paddingBottom: "70px" }}>
             {children}
           </main>

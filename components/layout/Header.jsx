@@ -36,7 +36,7 @@ export default function Header() {
     window.location.reload(); 
   };
 
-  if (pathname.startsWith('/dashboard') || pathname.startsWith('/partner')) {
+  if (pathname.startsWith('/dashboard') || pathname.startsWith('/partner') || pathname.startsWith('/admin')) {
     return null;
   }
 

@@ -1,4 +1,7 @@
 import { PrismaClient } from "@prisma/client";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "../api/auth/[...nextauth]/route";
+import { redirect } from "next/navigation";
 import OnboardingForm from "./OnboardingForm";
 
 const prisma = new PrismaClient();
