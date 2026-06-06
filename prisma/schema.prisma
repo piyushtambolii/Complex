@@ -1,0 +1,204 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String   @unique
+  role      String   @default("CUSTOMER")
+  createdAt DateTime @default(now())
+  
+  shop              Shop?
+  orders            Order[]
+  addresses         Address[]
+  requestedProducts RequestedProduct[]
+  savedItems        SavedItem[]
+  analyticsEvents   AnalyticsEvent[]
+}
+
+model Address {
+  id           String   @id @default(cuid())
+  userId       String
+  fullName     String
+  phone        String
+  addressLine1 String
+  addressLine2 String?
+  landmark     String?
+  district     String
+  taluka       String
+  village      String?
+  pincode      String
+  
+  user         User     @relation(fields: [userId], references: [id])
+}
+
+model Category {
+  id        String     @id @default(cuid())
+  name      String
+  slug      String     @unique
+  icon      String?
+  parentId  String?
+  
+  parent    Category?  @relation("Subcategories", fields: [parentId], references: [id])
+  children  Category[] @relation("Subcategories")
+  
+  shops     Shop[]
+  products  Product[]
+}
+
+model Shop {
+  id          String     @id @default(cuid())
+  ownerId     String     @unique
+  name        String
+  slug        String     @unique
+  description String?
+  
+  // Location
+  district    String
+  taluka      String
+  village     String
+  latitude    Float?
+  longitude   Float?
+  
+  // Branding
+  logoUrl     String?
+  bannerUrl   String?
+  categoryId  String
+  
+  // Verification
+  status      String     @default("PENDING")
+  isVerified  Boolean    @default(false)
+  verifiedAt  DateTime?
+  
+  createdAt   DateTime   @default(now())
+
+  owner           User             @relation(fields: [ownerId], references: [id])
+  category        Category         @relation(fields: [categoryId], references: [id])
+  products        Product[]
+  orders          Order[]
+  savedBy         SavedItem[]
+  analyticsEvents AnalyticsEvent[]
+}
+
+model Product {
+  id          String         @id @default(cuid())
+  shopId      String
+  categoryId  String?
+  name        String
+  slug        String         @unique
+  description String?
+  price       Float
+  unit        String
+  isAvailable Boolean        @default(true)
+  createdAt   DateTime       @default(now())
+
+  shop            Shop             @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  category        Category?        @relation(fields: [categoryId], references: [id])
+  images          ProductImage[]
+  orderItems      OrderItem[]
+  savedBy         SavedItem[]
+  analyticsEvents AnalyticsEvent[]
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  productId String
+  imageUrl  String
+  
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model ProductTemplate {
+  id          String         @id @default(cuid())
+  name        String         
+  description String?
+  items       TemplateItem[]
+}
+
+model TemplateItem {
+  id          String          @id @default(cuid())
+  templateId  String
+  name        String
+  price       Float
+  unit        String
+  category    String?         
+  
+  template    ProductTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+}
+
+model Order {
+  id                String      @id @default(cuid())
+  customerId        String
+  shopId            String
+  status            String      @default("PENDING")
+  totalAmount       Float
+  customerNotes     String?
+  
+  // Future Expansion
+  deliveryStatus    String?
+  deliveryPartnerId String?
+  
+  createdAt         DateTime    @default(now())
+
+  customer          User        @relation(fields: [customerId], references: [id])
+  shop              Shop        @relation(fields: [shopId], references: [id])
+  items             OrderItem[]
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  productId String
+  quantity  Int
+  price     Float
+
+  order     Order   @relation(fields: [orderId], references: [id])
+  product   Product @relation(fields: [productId], references: [id])
+}
+
+model RequestedProduct {
+  id          String   @id @default(cuid())
+  userId      String?
+  productName String
+  district    String
+  taluka      String
+  village     String?
+  createdAt   DateTime @default(now())
+
+  user        User?    @relation(fields: [userId], references: [id])
+}
+
+model SavedItem {
+  id        String   @id @default(cuid())
+  userId    String
+  shopId    String?
+  productId String?
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+  shop      Shop?    @relation(fields: [shopId], references: [id])
+  product   Product? @relation(fields: [productId], references: [id])
+
+  @@unique([userId, shopId, productId])
+}
+
+model AnalyticsEvent {
+  id         String   @id @default(cuid())
+  eventType  String   // SHOP_VIEW, PRODUCT_VIEW, SEARCH, WISHLIST_SAVE
+  userId     String?
+  shopId     String?
+  productId  String?
+  searchTerm String?
+  createdAt  DateTime @default(now())
+
+  user       User?    @relation(fields: [userId], references: [id])
+  shop       Shop?    @relation(fields: [shopId], references: [id])
+  product    Product? @relation(fields: [productId], references: [id])
+}
